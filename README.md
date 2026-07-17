@@ -71,9 +71,19 @@ businessKey 关联 staff_leave 表
 
 - Tool Calling 对接员工查询、月考勤统计、请假记录
 - Redis 多轮对话 + SSE 流式输出
+- Tool 层数据权限（ALL / DEPT / SELF）
 - 权限 `ai:chat`（admin / HR 经理）
 
 详见：[docs/AI助手说明.md](docs/AI助手说明.md)
+
+### 4. 操作日志 AOP（本人扩展）
+
+- `@OperationLog` 注解 + `@Around` 切面，记录操作人、IP、参数、耗时
+- 登录/请假/考勤导入等关键接口已接入
+- 密码脱敏、写库失败不影响主业务
+- 管理端分页查询，权限 `system:operation-log:list`
+
+详见：[docs/操作日志AOP.md](docs/操作日志AOP.md)
 
 ---
 
@@ -83,6 +93,8 @@ businessKey 关联 staff_leave 表
 hrm/
 ├── src/main/java/com/qiujie/
 │   ├── filter/          # JWT 过滤器
+│   ├── aspect/          # 操作日志 AOP
+│   ├── annotation/      # @OperationLog
 │   ├── config/          # Security、双数据源、Redis、AI
 │   ├── service/         # 业务逻辑
 │   ├── controller/      # REST 接口
@@ -94,7 +106,9 @@ hrm/
 │       └── tool/        # HrQueryTools
 ├── src/main/resources/
 │   ├── processes/leave.bpmn20.xml
-│   └── sql/ai-permission.sql
+│   └── sql/
+│       ├── ai-permission.sql
+│       └── operation-log.sql
 └── docs/                # 说明文档
 ```
 
@@ -119,6 +133,9 @@ mysql -u root -p < ../hrm_activiti.sql
 
 # AI 助手权限（可选，启用 AI 时执行）
 mysql -u root -p hrm < src/main/resources/sql/ai-permission.sql
+
+# 操作日志表与菜单权限
+mysql -u root -p hrm < src/main/resources/sql/operation-log.sql
 ```
 
 ### 3. 修改配置
@@ -235,6 +252,7 @@ Content-Type: application/json
 - [x] Activiti 请假流程配置与 ExecutionListener 考勤联动
 - [x] 双数据源配置（业务库 + Activiti 库）
 - [x] Spring AI 智能助手（Tool Calling + Redis 多轮 + SSE）
+- [x] 操作日志 AOP（注解 + 切面 + 审计表）
 - [x] API Key 外部化配置（环境变量 / application-local.yml）
 
 ---
@@ -263,3 +281,4 @@ A：`pom.xml` 已配置 Alfresco 仓库，首次构建需联网等待。
 - [JWT 鉴权流程](docs/鉴权流程.md)
 - [Activiti 请假流程](docs/请假流程.md)
 - [AI 智能助手](docs/AI助手说明.md)
+- [操作日志 AOP](docs/操作日志AOP.md)
