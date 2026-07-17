@@ -2,6 +2,7 @@ package com.qiujie.controller;
 
 import com.qiujie.service.AttendanceService;
 import com.qiujie.entity.Attendance;
+import com.qiujie.annotation.OperationLog;
 
 import com.qiujie.dto.ResponseDTO;
 import io.swagger.annotations.ApiOperation;
@@ -75,6 +76,7 @@ public class AttendanceController {
     }
 
     @ApiOperation("数据导入接口")
+    @OperationLog(module = "考勤", action = "导入数据")
     @PostMapping("/import")
     @PreAuthorize("hasAnyAuthority('performance:attendance:import')")
     public ResponseDTO imp(MultipartFile file) throws IOException {

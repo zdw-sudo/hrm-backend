@@ -2,6 +2,7 @@ package com.qiujie.controller;
 
 import com.qiujie.service.StaffLeaveService;
 import com.qiujie.entity.StaffLeave;
+import com.qiujie.annotation.OperationLog;
 
 import com.qiujie.dto.ResponseDTO;
 import io.swagger.annotations.ApiOperation;
@@ -105,12 +106,14 @@ public class StaffLeaveController {
     }
 
     @ApiOperation("申请请假")
+    @OperationLog(module = "请假", action = "提交申请")
     @PostMapping("/apply/{code}")
     public ResponseDTO apply(@RequestBody StaffLeave staffLeave,@PathVariable String code) {
         return this.staffLeaveService.apply(staffLeave,code);
     }
 
     @ApiOperation("拾取请假任务")
+    @OperationLog(module = "请假", action = "拾取任务")
     @PostMapping("/claim/{code}")
     @PreAuthorize("hasAnyAuthority('performance:leave:claim')")
     public ResponseDTO claim(@RequestBody StaffLeave staffLeave,@PathVariable String code) {
@@ -125,12 +128,14 @@ public class StaffLeaveController {
 
 
     @ApiOperation("完成任务")
+    @OperationLog(module = "请假", action = "审批提交")
     @PostMapping("/complete/{code}")
     public ResponseDTO complete(@RequestBody StaffLeave staffLeave, @PathVariable String code) {
         return this.staffLeaveService.complete(staffLeave,code);
     }
 
     @ApiOperation("撤销请假")
+    @OperationLog(module = "请假", action = "撤销申请")
     @PostMapping("/cancel")
     public ResponseDTO cancel(@RequestBody StaffLeave staffLeave){
         return this.staffLeaveService.cancel(staffLeave);
