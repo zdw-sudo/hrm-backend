@@ -1,0 +1,136 @@
+server:
+  port: 8888
+
+spring:
+  # 多数据源
+  datasource:
+    master:
+      jdbc-url: jdbc:mysql://127.0.0.1:3306/hrm?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2b8
+      username: root
+      password: 1234
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      type: com.zaxxer.hikari.HikariDataSource
+    activiti:
+      jdbc-url: jdbc:mysql://127.0.0.1:3306/hrm_activiti?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2b8
+      username: root
+      password: 1234
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      type: com.zaxxer.hikari.HikariDataSource
+
+  activiti:
+    database-schema-update: true # 检查数据库的表是否存在，不存在就创建
+    history-level: full
+    db-history-used: true # 是否使用历史记录表
+
+  servlet:
+    multipart:
+      enabled: true #默认支持文件上传
+      max-file-size: 20MB # 最大支持文件大小
+      max-request-size: 30MB # 最大支持请求大小
+
+  data:
+    redis:
+      host: 192.168.36.136
+      port: 6379
+      password: 123321
+      database: 2
+      lettuce:
+        pool:
+          max-idle: 16
+          max-active: 32
+          min-idle: 8
+
+  ai:
+    openai:
+      # 勿在此填写真实 Key。本地请设置环境变量 DEEPSEEK_API_KEY，或使用 application-local.yml（已 gitignore）
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+    model:
+      chat: openai
+      embedding: none
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
+
+  main:
+    allow-bean-definition-overriding: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # 扫描通用枚举包
+  type-enums-package: com.qiujie.enums
+  mapper-locations: classpath:mapper/*.xml
+
+
+file-path: D:/project/idea/hrm/file/ # 文件存储位置
+
+# AI 智能助手（Spring AI + Tool Calling）
+# enabled=false 时不加载 AI 模块，无需 API Key
+# 启用时：hrm.ai.enabled=true，并设置环境变量 DEEPSEEK_API_KEY
+# PowerShell 示例：$env:DEEPSEEK_API_KEY="你的新Key"
+# IDEA：Run Configuration -> Environment variables -> DEEPSEEK_API_KEY=...
+hrm:
+  ai:
+    enabled: true
+    history-max-messages: 20
+    history-ttl-days: 7
+
+
+# 2024国家法定节假日
+holidays:
+  - 2024-01-01
+  - 2024-02-10
+  - 2024-02-11
+  - 2024-02-12
+  - 2024-02-13
+  - 2024-02-14
+  - 2024-02-15
+  - 2024-02-16
+  - 2024-02-17
+  - 2024-04-04
+  - 2024-04-05
+  - 2024-04-06
+  - 2024-05-01
+  - 2024-05-02
+  - 2024-05-03
+  - 2024-05-04
+  - 2024-05-05
+  - 2024-06-08
+  - 2024-06-09
+  - 2024-06-10
+  - 2024-09-15
+  - 2024-09-16
+  - 2024-09-17
+  - 2024-10-01
+  - 2024-10-02
+  - 2024-10-03
+  - 2024-10-04
+  - 2024-10-05
+  - 2024-10-06
+  - 2024-10-07
+
+
+
+
+
+
+
+
+
+
+
+
+
+

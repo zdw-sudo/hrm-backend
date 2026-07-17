@@ -1,0 +1,15 @@
+# 编译产物
+target/
+
+# IDE
+.idea/
+*.iml
+
+# 本地密钥（勿提交）
+src/main/resources/application-local.yml
+
+# 日志
+*.log
+
+# 上传文件目录（本地路径）
+file/
