@@ -1,6 +1,7 @@
 package com.qiujie.ai.tool;
 
 import cn.hutool.core.date.DateUtil;
+import com.qiujie.ai.scope.AiDataScopeService;
 import com.qiujie.dto.ResponseDTO;
 import com.qiujie.entity.StaffLeave;
 import com.qiujie.enums.AttendanceStatusEnum;
@@ -34,11 +35,18 @@ public class HrQueryTools {
     @Autowired
     private AttendanceMapper attendanceMapper;
 
+    @Autowired
+    private AiDataScopeService aiDataScopeService;
+
+    private record StaffResolveResult(List<StaffDeptVO> staffList, String errorMessage) {
+    }
+
     @Tool(description = """
             根据员工姓名查询员工基本信息。
             适用场景：查某人在哪个部门、工号、电话、在职状态等。
             当用户提到具体员工姓名且需要人员档案信息时，优先调用此工具。
             若返回多条同名员工，应告知用户并列出差异（如部门）供确认。
+            若工具返回【权限不足】，必须原样告知用户，不要尝试编造数据。
             """)
     public String getEmployeeByName(
             @ToolParam(description = "员工姓名，必须是中文全名，例如：张三") String staffName
@@ -46,7 +54,11 @@ public class HrQueryTools {
         if (staffName == null || staffName.isBlank()) {
             return "【员工查询结果】员工姓名不能为空。";
         }
-        List<StaffDeptVO> staffList = findStaffByName(staffName.trim());
+        StaffResolveResult resolved = resolveAccessibleStaff(staffName.trim());
+        if (resolved.errorMessage() != null) {
+            return resolved.errorMessage();
+        }
+        List<StaffDeptVO> staffList = resolved.staffList();
         if (staffList.isEmpty()) {
             return "【员工查询结果】未找到姓名为「" + staffName.trim() + "」的员工，请确认姓名是否正确。";
         }
@@ -72,6 +84,7 @@ public class HrQueryTools {
             返回迟到、早退、旷工、调休、休假等次数统计。
             适用场景：用户问某人某月考勤怎么样、迟到几次、有没有旷工。
             若用户说上个月、本月，需先换算为 yyyy-MM 格式再传入 month 参数。
+            若工具返回【权限不足】，必须原样告知用户，不要尝试编造数据。
             """)
     public String getMonthlyAttendance(
             @ToolParam(description = "员工姓名，例如：张三") String staffName,
@@ -88,7 +101,11 @@ public class HrQueryTools {
             return "【考勤统计】月份格式无效，请使用 yyyy-MM 或 yyyyMM 格式。";
         }
 
-        List<StaffDeptVO> staffList = findStaffByName(staffName.trim());
+        StaffResolveResult resolved = resolveAccessibleStaff(staffName.trim());
+        if (resolved.errorMessage() != null) {
+            return resolved.errorMessage();
+        }
+        List<StaffDeptVO> staffList = resolved.staffList();
         if (staffList.isEmpty()) {
             return "【考勤统计】未找到员工「" + staffName.trim() + "」，无法查询考勤。";
         }
@@ -127,6 +144,7 @@ public class HrQueryTools {
             返回请假类型、天数、起始日期、审批状态（待审核/通过/驳回/撤销/审核中）等。
             适用场景：用户问某人请过什么假、请假审批到哪了、最近有没有请假。
             仅查询，不能用于提交或撤销请假。
+            若工具返回【权限不足】，必须原样告知用户，不要尝试编造数据。
             """)
     public String getLeaveRecordsByStaffName(
             @ToolParam(description = "员工姓名，例如：李四") String staffName,
@@ -137,7 +155,11 @@ public class HrQueryTools {
         }
         int recordLimit = limit == null || limit <= 0 ? 5 : Math.min(limit, 20);
 
-        List<StaffDeptVO> staffList = findStaffByName(staffName.trim());
+        StaffResolveResult resolved = resolveAccessibleStaff(staffName.trim());
+        if (resolved.errorMessage() != null) {
+            return resolved.errorMessage();
+        }
+        List<StaffDeptVO> staffList = resolved.staffList();
         if (staffList.isEmpty()) {
             return "【请假记录】未找到员工「" + staffName.trim() + "」。";
         }
@@ -207,6 +229,23 @@ public class HrQueryTools {
             }
         }
         return staffList;
+    }
+
+    private StaffResolveResult resolveAccessibleStaff(String staffName) {
+        List<StaffDeptVO> staffList = findStaffByName(staffName);
+        if (staffList.isEmpty()) {
+            return new StaffResolveResult(List.of(), null);
+        }
+        List<StaffDeptVO> accessible = new ArrayList<>();
+        for (StaffDeptVO staff : staffList) {
+            if (aiDataScopeService.canAccess(staff)) {
+                accessible.add(staff);
+            }
+        }
+        if (accessible.isEmpty()) {
+            return new StaffResolveResult(List.of(), aiDataScopeService.buildAccessDeniedMessage(staffList.get(0)));
+        }
+        return new StaffResolveResult(accessible, null);
     }
 
     @SuppressWarnings("unchecked")

@@ -25,10 +25,32 @@ flowchart LR
 | getMonthlyAttendance | 查某员工某月考勤统计（迟到/早退/旷工等） |
 | getLeaveRecordsByStaffName | 查某员工请假记录 |
 
+## 数据权限
+
+接口层 `@PreAuthorize('ai:chat')` 控制「能否使用 AI」；Tool 层 `AiDataScopeService` 控制「能查谁的数据」。
+
+| 范围 | 角色 | 可查询 |
+|------|------|--------|
+| ALL | admin、hr | 全公司员工 |
+| DEPT | manager、ceo、cto 等部门负责人 | 本部门员工 |
+| SELF | 其他 | 仅本人 |
+
+```
+用户提问 → AiChatController（接口权限）
+         → HrQueryTools（Tool 调用）
+         → AiDataScopeService.canAccess（数据权限）
+         → 拒绝时返回【权限不足】，AI 原样转述
+```
+
+核心类：`ai/scope/AiDataScopeService.java`、`ai/tool/HrQueryTools.java`
+
+查询当前用户数据范围：`GET /ai/scope`
+
 ## 接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
+| GET | `/ai/scope` | 当前用户 AI 数据查询范围 |
 | GET | `/ai/chat/history` | 获取当前用户对话历史 |
 | DELETE | `/ai/chat/history` | 清空对话历史 |
 | POST | `/ai/chat` | 同步对话 |

@@ -1,6 +1,8 @@
 package com.qiujie.ai.controller;
 
 import com.qiujie.ai.dto.AiChatRequest;
+import com.qiujie.ai.scope.AiDataScopeService;
+import com.qiujie.ai.scope.AiOperatorContext;
 import com.qiujie.ai.service.AiAssistantService;
 import com.qiujie.ai.service.AiChatHistoryService;
 import com.qiujie.dto.Response;
@@ -30,6 +32,23 @@ public class AiChatController {
 
     @Autowired
     private AiChatHistoryService chatHistoryService;
+
+    @Autowired
+    private AiDataScopeService aiDataScopeService;
+
+    @Operation(summary = "获取当前用户的 AI 数据查询范围")
+    @PreAuthorize("hasAuthority('ai:chat')")
+    @GetMapping("/scope")
+    public ResponseDTO getScope() {
+        AiOperatorContext operator = aiDataScopeService.getCurrentOperator();
+        return Response.success(Map.of(
+                "scope", operator.getScope().name(),
+                "description", aiDataScopeService.describeCurrentScope(),
+                "operator", operator.getCode(),
+                "operatorName", operator.getName(),
+                "deptName", operator.getDeptName() != null ? operator.getDeptName() : ""
+        ));
+    }
 
     @Operation(summary = "获取当前用户的 AI 对话历史（Redis）")
     @PreAuthorize("hasAuthority('ai:chat')")
